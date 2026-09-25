@@ -26,6 +26,12 @@ spec:
         - maxSkew: 1
           topologyKey: kubernetes.io/hostname
           whenUnsatisfiable: DoNotSchedule
+          # Without this, the tainted control-plane node still counts as a
+          # topology domain holding 0 pods. min=0 then makes any 2nd pod on a
+          # worker a skew of 2, so replicas past the first two stay Pending
+          # forever. Honor excludes nodes whose taints this pod does not
+          # tolerate from the skew calculation.
+          nodeTaintsPolicy: Honor
           labelSelector:
             matchLabels:
               app: whoami
