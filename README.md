@@ -9,7 +9,26 @@ Built against **Kubernetes v1.37** (current stable: `v1.37.1`).
 
 ## Quick start (local, macOS Apple Silicon)
 
-Automated VM provisioning with Multipass — all node prep handled by cloud-init:
+Two supported paths. See **[docs/kind-vs-multipass.md](docs/kind-vs-multipass.md)** for
+which to use when — short version: Multipass for install/upgrade/etcd/troubleshooting
+practice, kind for fast kubectl reps.
+
+### Option A — kind (~2 min, containers)
+
+Same 3-CP + 2-worker topology, with an HAProxy load-balancer container created automatically:
+
+```bash
+kind create cluster --config kind/ha-cluster.yaml
+kubectl get nodes
+```
+
+**Verified working** on Apple M3 Pro: 5 nodes `Ready`, a real 3-member etcd quorum, and
+confirmed failover — stopping the original `kubeadm init` node left the API both readable
+and writable.
+
+### Option B — Multipass (~15 min, real VMs)
+
+Real ARM64 VMs where *you* run every kubeadm step, with node prep automated by cloud-init:
 
 ```bash
 brew install --cask multipass        # prompts for your admin password
@@ -20,7 +39,7 @@ chmod +x scripts/*.sh
 
 Then follow **Steps 2–5** below (Step 1 is already done by cloud-init).
 
-Full details, resource budget, and failover testing: **[docs/multipass-setup.md](docs/multipass-setup.md)**
+Details, resource budget, failover testing: **[docs/multipass-setup.md](docs/multipass-setup.md)**
 
 The rest of this README is the manual, provider-agnostic procedure — use it on any VMs,
 bare metal, or cloud instances.

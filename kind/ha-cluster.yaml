@@ -1,0 +1,31 @@
+# kind cluster mirroring the HA topology: 3 control planes + 2 workers.
+#
+#   kind create cluster --config kind/ha-cluster.yaml
+#   kubectl get nodes
+#   kind delete cluster --name irshadproject
+#
+# With more than one control-plane node, kind automatically creates an
+# `irshadproject-external-load-balancer` HAProxy container in front of the
+# apiservers — the same role lb-1 plays in the Multipass setup.
+#
+# kind provisions its nodes with kubeadm internally, so etcd quorum, the join
+# flow, and control-plane failover behave authentically. What you do NOT get is
+# running `kubeadm init`/`join` yourself, or real systemd node debugging — use
+# the Multipass setup (docs/multipass-setup.md) for those.
+
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: irshadproject
+
+networking:
+  # Matches the Multipass/kubeadm setup so manifests and network policies behave
+  # identically across both environments.
+  podSubnet: "10.244.0.0/16"
+  serviceSubnet: "10.96.0.0/12"
+
+nodes:
+  - role: control-plane
+  - role: control-plane
+  - role: control-plane
+  - role: worker
+  - role: worker
