@@ -1,0 +1,16 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: whoami
+  namespace: demo
+spec:
+  # At least 2 of 4 replicas must stay available during voluntary disruption.
+  # `kubectl drain` will block rather than breach this — which is the whole
+  # point: it turns "I hope the rollout is safe" into an enforced guarantee.
+  #
+  # Note this only constrains VOLUNTARY disruption (drain, eviction). A hard
+  # node crash ignores it entirely.
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: whoami

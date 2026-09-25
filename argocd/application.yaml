@@ -1,0 +1,38 @@
+# ArgoCD Application: the bootstrap link between Git and the cluster.
+#
+# This file is deliberately OUTSIDE manifests/ so ArgoCD does not manage itself.
+# Apply it once by hand; everything under manifests/ is then managed by ArgoCD.
+#
+#   kubectl apply -f argocd/application.yaml
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: demo
+  namespace: argocd
+  finalizers:
+    # Ensures deleting this Application also removes the resources it created,
+    # instead of orphaning them in the cluster.
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+
+  source:
+    repoURL: https://github.com/irshadstars/irshadproject.git
+    targetRevision: main
+    path: manifests
+
+  destination:
+    server: https://kubernetes.default.svc
+
+  syncPolicy:
+    automated:
+      # prune: delete cluster resources when their manifest is removed from Git.
+      # Without this, deletions in Git are silently ignored and the cluster
+      # accumulates orphans — Git stops being the source of truth.
+      prune: true
+      # selfHeal: revert manual kubectl changes back to the Git state.
+      # This is what makes drift impossible rather than merely discouraged.
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: whoami
+  namespace: demo
+  labels:
+    app: whoami
+spec:
+  replicas: 4
+  selector:
+    matchLabels:
+      app: whoami
+  template:
+    metadata:
+      labels:
+        app: whoami
+    spec:
+      # Spread replicas evenly across nodes. maxSkew: 1 means no node may hold
+      # more than one pod above the least-loaded node. DoNotSchedule makes this
+      # a hard requirement, so an imbalance leaves pods Pending rather than
+      # silently piling onto one node.
+      #
+      # This constraint is the reason the cluster has 2 workers — on a
+      # single-node cluster it is satisfied trivially and teaches nothing.
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchLabels:
+              app: whoami
+
+      containers:
+        - name: whoami
+          image: traefik/whoami:v1.10.1
+          ports:
+            - name: http
+              containerPort: 80
+          # Requests are what the scheduler actually packs against; limits cap
+          # runtime use. Set deliberately low so 4 replicas fit comfortably.
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+            limits:
+              cpu: 100m
+              memory: 64Mi
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 2
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            runAsUser: 65532
+            capabilities:
+              drop: ["ALL"]
+            seccompProfile:
+              type: RuntimeDefault

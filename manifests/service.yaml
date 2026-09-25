@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: whoami
+  namespace: demo
+spec:
+  type: NodePort
+  selector:
+    app: whoami
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+      # 30080 is mapped to the host by kind/dev-cluster.yaml, so this is
+      # reachable from macOS at http://localhost:30080 with no port-forward.
+      nodePort: 30080
