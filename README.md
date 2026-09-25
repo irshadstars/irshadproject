@@ -7,6 +7,26 @@ Built against **Kubernetes v1.37** (current stable: `v1.37.1`).
 
 ---
 
+## Quick start (local, macOS Apple Silicon)
+
+Automated VM provisioning with Multipass — all node prep handled by cloud-init:
+
+```bash
+brew install --cask multipass        # prompts for your admin password
+chmod +x scripts/*.sh
+./scripts/provision.sh               # 6 VMs, node prep applied automatically
+./scripts/setup-haproxy.sh           # load balancer, prints your kubeadm init command
+```
+
+Then follow **Steps 2–5** below (Step 1 is already done by cloud-init).
+
+Full details, resource budget, and failover testing: **[docs/multipass-setup.md](docs/multipass-setup.md)**
+
+The rest of this README is the manual, provider-agnostic procedure — use it on any VMs,
+bare metal, or cloud instances.
+
+---
+
 ## Architecture
 
 ```mermaid
